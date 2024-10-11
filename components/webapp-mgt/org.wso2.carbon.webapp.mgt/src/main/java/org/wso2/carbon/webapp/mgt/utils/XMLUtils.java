@@ -17,15 +17,10 @@
  */
 package org.wso2.carbon.webapp.mgt.utils;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.xerces.util.SecurityManager;
 import org.w3c.dom.Document;
 
-import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.InputStream;
 
@@ -33,8 +28,6 @@ import java.io.InputStream;
  * Contains XML utility methods based on DOM.
  */
 public class XMLUtils {
-
-    private static Log log = LogFactory.getLog(XMLUtils.class);
 
     /**
      * Build a Document from a file
@@ -44,7 +37,7 @@ public class XMLUtils {
      * @throws Exception if an error occurs
      */
     public static Document buildDocumentFromFile(File xmlFile) throws Exception {
-        DocumentBuilderFactory dbFactory = getSecuredDocumentBuilder();
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
         Document doc = dBuilder.parse(xmlFile);
         doc.getDocumentElement().normalize();
@@ -59,43 +52,10 @@ public class XMLUtils {
      * @throws Exception if an error occurs
      */
     public static Document buildDocumentFromInputStream(InputStream is) throws Exception {
-        DocumentBuilderFactory dbFactory = getSecuredDocumentBuilder();
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
         Document doc = dBuilder.parse(is);
         doc.getDocumentElement().normalize();
         return doc;
     }
-
-    /**
-     * Returns a secured DocumentBuilderFactory instance
-     *
-     * @return DocumentBuilderFactory
-     */
-    public static DocumentBuilderFactory getSecuredDocumentBuilder() {
-
-        org.apache.xerces.impl.Constants Constants = null;
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-        dbf.setNamespaceAware(true);
-        dbf.setXIncludeAware(false);
-        dbf.setExpandEntityReferences(false);
-        try {
-            // Enable secure processing
-            dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-            dbf.setFeature(Constants.XERCES_FEATURE_PREFIX + Constants.DISALLOW_DOCTYPE_DECL_FEATURE, true);
-            dbf.setFeature(Constants.SAX_FEATURE_PREFIX + Constants.EXTERNAL_GENERAL_ENTITIES_FEATURE, false);
-            dbf.setFeature(Constants.SAX_FEATURE_PREFIX + Constants.EXTERNAL_PARAMETER_ENTITIES_FEATURE, false);
-            dbf.setFeature(Constants.XERCES_FEATURE_PREFIX + Constants.LOAD_EXTERNAL_DTD_FEATURE, false);
-        } catch (ParserConfigurationException e) {
-            log.error(
-                    "Failed to load XML Processor Feature " + Constants.EXTERNAL_GENERAL_ENTITIES_FEATURE + " or " +
-                            Constants.EXTERNAL_PARAMETER_ENTITIES_FEATURE + " or " + Constants.LOAD_EXTERNAL_DTD_FEATURE);
-        }
-
-        SecurityManager securityManager = new SecurityManager();
-        securityManager.setEntityExpansionLimit(0);
-        dbf.setAttribute(Constants.XERCES_PROPERTY_PREFIX + Constants.SECURITY_MANAGER_PROPERTY, securityManager);
-
-        return dbf;
-    }
-
 }
