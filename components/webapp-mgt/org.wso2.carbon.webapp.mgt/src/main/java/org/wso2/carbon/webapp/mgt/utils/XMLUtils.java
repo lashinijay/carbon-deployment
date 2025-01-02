@@ -17,17 +17,24 @@
  */
 package org.wso2.carbon.webapp.mgt.utils;
 
+import com.sun.org.apache.xerces.internal.impl.Constants;
+import com.sun.org.apache.xerces.internal.util.SecurityManager;
 import org.w3c.dom.Document;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.io.InputStream;
+
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Contains XML utility methods based on DOM.
  */
 public class XMLUtils {
+
+    private static final int ENTITY_EXPANSION_LIMIT = 0;
 
     /**
      * Build a Document from a file
@@ -52,10 +59,35 @@ public class XMLUtils {
      * @throws Exception if an error occurs
      */
     public static Document buildDocumentFromInputStream(InputStream is) throws Exception {
-        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilderFactory dbFactory = getSecuredDocumentBuilderFactory();
         DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
         Document doc = dBuilder.parse(is);
         doc.getDocumentElement().normalize();
         return doc;
+    }
+
+    /**
+     * Create DocumentBuilderFactory with the XXE and XEE prevention measurements.
+     *
+     * @return Secured DocumentBuilderFactory instance.
+     * @throws ParserConfigurationException When failed to load XML Processor Features
+     *                                      external-general-entities, external-parameter-entities, nonvalidating/load-external-dtd.
+     */
+    public static DocumentBuilderFactory getSecuredDocumentBuilderFactory() throws ParserConfigurationException {
+
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        dbf.setNamespaceAware(true);
+        dbf.setXIncludeAware(false);
+        dbf.setExpandEntityReferences(false);
+        dbf.setFeature(Constants.SAX_FEATURE_PREFIX + Constants.EXTERNAL_GENERAL_ENTITIES_FEATURE, false);
+        dbf.setFeature(Constants.SAX_FEATURE_PREFIX + Constants.EXTERNAL_PARAMETER_ENTITIES_FEATURE, false);
+        dbf.setFeature(Constants.XERCES_FEATURE_PREFIX + Constants.LOAD_EXTERNAL_DTD_FEATURE, false);
+        dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+
+        SecurityManager securityManager = new SecurityManager();
+        securityManager.setEntityExpansionLimit(ENTITY_EXPANSION_LIMIT);
+        dbf.setAttribute(Constants.XERCES_PROPERTY_PREFIX + Constants.SECURITY_MANAGER_PROPERTY, securityManager);
+
+        return dbf;
     }
 }
