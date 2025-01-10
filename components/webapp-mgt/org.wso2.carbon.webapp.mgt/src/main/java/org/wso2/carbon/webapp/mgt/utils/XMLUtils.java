@@ -17,8 +17,8 @@
  */
 package org.wso2.carbon.webapp.mgt.utils;
 
-import com.sun.org.apache.xerces.internal.impl.Constants;
-import com.sun.org.apache.xerces.internal.util.SecurityManager;
+import org.apache.xerces.impl.Constants;
+import org.apache.xerces.util.SecurityManager;
 import org.w3c.dom.Document;
 
 import java.io.File;
